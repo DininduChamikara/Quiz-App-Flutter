@@ -4,6 +4,7 @@ import 'package:quiz_app/game_header.dart';
 import 'package:quiz_app/time_remaining.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'dart:async';
 
 class GameScreen extends StatefulWidget {
   const GameScreen({super.key});
@@ -18,13 +19,45 @@ class _GameScreenState extends State<GameScreen> {
   int score = 0;
   int quizNo = 0;
 
+  late Timer timer;
+  double start = 10;
+
+  void startTimer() {
+    const oneSec = Duration(seconds: 1);
+    timer = Timer.periodic(
+      oneSec,
+      (Timer timer) {
+        if (start == 0) {
+          setState(() {
+            fetchImageFromApi();
+            timer.cancel();
+            start = 10;
+          });
+          startTimer();
+        } else {
+          setState(() {
+            start = start - 1;
+          });
+        }
+      },
+    );
+  }
+
+  void stopTimer() {
+    if (timer.isActive) {
+      timer.cancel();
+    }
+  }
+
   @override
   void initState() {
     fetchImageFromApi();
+    startTimer();
     super.initState();
   }
 
   void onSubmit(int pressedButton) {
+    stopTimer();
     if (imageUrl != "") {
       if (pressedButton == solution) {
         setState(() {
@@ -32,6 +65,10 @@ class _GameScreenState extends State<GameScreen> {
         });
       }
       fetchImageFromApi();
+      setState(() {
+        start = 10;
+      });
+      startTimer();
     }
   }
 
@@ -42,7 +79,7 @@ class _GameScreenState extends State<GameScreen> {
       child: Column(
         children: [
           GameHeader(score: score, quizNo: quizNo),
-          const TimeRemaining(),
+          TimeRemaining(fetchImageFromApi: fetchImageFromApi, start: start),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 20),
             child: ClipRRect(
