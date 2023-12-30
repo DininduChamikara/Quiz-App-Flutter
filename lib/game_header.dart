@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 
 class GameHeader extends StatelessWidget {
-  const GameHeader({super.key, required this.score, required this.quizNo});
+  const GameHeader({super.key, required this.score, required this.quizNo, required this.switchScreen});
 
   final int score;
   final int quizNo;
+
+  final Function (String screen) switchScreen;
 
   @override
   Widget build(BuildContext context) {
@@ -81,7 +83,9 @@ class GameHeader extends StatelessWidget {
                     child: Transform.rotate(
                       angle: 180 * (3.141592653589793 / 180),
                       child: IconButton(
-                        onPressed: () {},
+                        onPressed: () {
+                          switchScreen('start-screen');
+                        },
                         icon: const Icon(
                           Icons.logout,
                           size: 25,

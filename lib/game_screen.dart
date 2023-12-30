@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:quiz_app/answer_input.dart';
 import 'package:quiz_app/game_header.dart';
+import 'package:quiz_app/spin_loader.dart';
 import 'package:quiz_app/time_remaining.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'dart:async';
 
 class GameScreen extends StatefulWidget {
-  const GameScreen({super.key});
+  const GameScreen({super.key, required this.switchScreen});
+
+  final Function (String screen) switchScreen;
 
   @override
   State<GameScreen> createState() => _GameScreenState();
@@ -33,7 +36,7 @@ class _GameScreenState extends State<GameScreen> {
             timer.cancel();
             start = 10;
           });
-          startTimer();
+          // startTimer();
         } else {
           setState(() {
             start = start - 1;
@@ -52,7 +55,6 @@ class _GameScreenState extends State<GameScreen> {
   @override
   void initState() {
     fetchImageFromApi();
-    startTimer();
     super.initState();
   }
 
@@ -64,11 +66,10 @@ class _GameScreenState extends State<GameScreen> {
           score++;
         });
       }
-      fetchImageFromApi();
       setState(() {
         start = 10;
       });
-      startTimer();
+      fetchImageFromApi();
     }
   }
 
@@ -78,17 +79,25 @@ class _GameScreenState extends State<GameScreen> {
       width: double.infinity,
       child: Column(
         children: [
-          GameHeader(score: score, quizNo: quizNo),
+          GameHeader(score: score, quizNo: quizNo, switchScreen: widget.switchScreen),
           TimeRemaining(fetchImageFromApi: fetchImageFromApi, start: start),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(8.0),
-              child: Image.network(
-                imageUrl,
+          if (imageUrl == "")
+            Container(
+              height: 200,
+              alignment: Alignment.center,
+              child: const SpinLoader(),
+            )
+          else
+            Container(
+              height: 200,
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(8.0),
+                child: Image.network(
+                  imageUrl,
+                ),
               ),
             ),
-          ),
           AnswerInput(
             onSubmit: onSubmit,
           ),
@@ -110,6 +119,7 @@ class _GameScreenState extends State<GameScreen> {
           solution = responseData['solution'];
           quizNo++;
         });
+        startTimer();
       } else {
         print(
             'Failed to fetch image from API. Status code: ${response.statusCode}');
